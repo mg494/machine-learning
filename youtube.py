@@ -1,38 +1,31 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
-import sys
 import bs4 as bs
-import requests
+import requests, os, sys, glob
 
-IMPORTFOLDER = r"C:\Users\Marc\Documents\python_projects\machine_learning"
-
-df = pd.read_csv(IMPORTFOLDER+r"\dataset\DEvideos.csv")
-
-# print some
-print(len(df.index))
-#print(datetime.strptime(df["trending_date"][0],"%y.%d.%m"))
-
-print(df.columns)
-print(df["video_id"][0])
-print(df["tags"][0])
+# local packages
+from helpers import *
 
 # input arguments for import
 nargin = len(sys.argv)-1
 argin = sys.argv[1:]
 
-if nargin > 0 and argin[0] is "pickle":
-	pass
+# parameter
+WORKDIR = r"C:\Users\Marc\Documents\python_projects\machine_learning"
 
-# make time series from trending videos
-trending_dates = df["trending_date"].drop_duplicates(keep="first").values
+# write time series from dataset
+if nargin > 0 and argin[0] == "timeseries":
+	time_series = pd.DataFrame()
+	files = glob.glob(WORKDIR+r"\dataset\*.csv")
+	for file in files:
+		print(file)
+		dataframe = pd.read_csv(file)
+		print(len(dataframe.index))
+		print(dataframe.columns)
+		time_series = time_series_from_dataset(dataframe,"likes")
 
-# get data for time series
-time_series = pd.DataFrame()
-for date in trending_dates:
-	trending_videos = df[df["trending_date"]==date]
-	time_series = time_series.append(df.iloc[trending_videos["comment_count"].idxmax()])
-print(time_series["trending_date"])
+
 
 """
 # get html text from video
