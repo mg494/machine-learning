@@ -1,8 +1,6 @@
 import pandas as pd
-import numpy as np
 from datetime import datetime
-import bs4 as bs
-import requests, os, sys, glob
+import os, sys, glob
 import matplotlib.pyplot as plt
 
 # package settings
@@ -57,7 +55,6 @@ if nargin > 0 and argin[0] == "timeseries":
 
 	# read dataset
 	dataframe = pd.read_pickle("./dataset.pkl")
-	time_series = pd.DataFrame()
 
 	for country in dataframe["country"].unique():
 		# filter frame by country
@@ -104,7 +101,7 @@ if nargin > 0 and argin[0] == "timeseries":
 timeseries = pd.read_pickle("./timeseries.pkl")
 
 # plot mean views for each country
-plotitem = "mean_views"
+plotitem = "mean_likes"
 fig, axis = plt.subplots()
 for country in timeseries["country"].unique():
 	df_filtered = timeseries[timeseries["country"]==country]
