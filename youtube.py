@@ -2,6 +2,7 @@ import pandas as pd
 from datetime import datetime
 import os, sys, glob
 import matplotlib.pyplot as plt
+from progress.bar import Bar
 
 # package settings
 pd.set_option('display.max_columns', None)
@@ -47,6 +48,24 @@ if nargin > 0 and argin[0] == "dataset":
 	all_countries_numerical["publish_time"] = publish_time
 	all_countries_numerical["days_to_trends"] = time_to_trends
 	all_countries_numerical.reset_index()
+
+
+	# setup progress bar
+	bar = Bar('Processing', max=len(all_countries_numerical["video_id"].unique()))
+
+	# write minimum number of days_to_trends to every corresponding video
+	for video in enumerate(all_countries_numerical["video_id"].unique()):
+		# print progress
+		bar.next()
+
+		# filter rows by video id
+		df_by_video = all_countries_numerical[all_countries_numerical["video_id"]==video]
+
+		# get days_to_trends
+		all_countries_numerical[all_countries_numerical["video_id"]==video].loc[:,"days_to_trends"] = df_by_video["days_to_trends"].max()
+
+
+	bar.finish()
 	all_countries_numerical.to_pickle("./dataset.pkl")
 
 if nargin > 0 and argin[0] == "timeseries":
