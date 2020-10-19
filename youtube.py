@@ -97,6 +97,10 @@ if nargin > 0 and argin[0] == "timeseries":
 	time_series.sort_values("trending_date",inplace=True)
 	time_series.to_pickle("./timeseries.pkl")
 
+# read dataset from pickle
+dataframe = pd.read_pickle("./dataset.pkl")
+print(len(dataframe.video_id),len(dataframe.video_id.unique()))
+
 # read time series from pickle
 timeseries = pd.read_pickle("./timeseries.pkl")
 
