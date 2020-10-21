@@ -26,46 +26,28 @@ if nargin > 0 and argin[0] == "dataset":
 		country_data["country"] = filename[0:2]
 		all_countries_numerical = all_countries_numerical.append(country_data)
 
-	# calculate time to trends
-	time_to_trends = []
-	new_format_publish_date = []
-	new_format_trending_date = []
-	publish_time = []
-	for publish_string, trending_string in zip(all_countries_numerical["publish_time"].values,all_countries_numerical["trending_date"].values):
-		publish_date = datetime.strptime(publish_string,"%Y-%m-%dT%H:%M:%S.%fZ").date()
-		trending_date = datetime.strptime(trending_string,"%y.%d.%m").date()
-		delta = trending_date - publish_date
+	print(len(all_countries_numerical.index))
 
-		# prepare arrays for columns
-		time_to_trends.append(delta.days)
-		publish_time.append(datetime.strptime(publish_string,"%Y-%m-%dT%H:%M:%S.%fZ").time())
-		new_format_publish_date.append(publish_date)
-		new_format_trending_date.append(trending_date)
-
-	# put everything in one dataframe
-	all_countries_numerical["publish_date"] = new_format_publish_date
-	all_countries_numerical["trending_date"] = new_format_trending_date
+	# fix trending_date format and extract date from publish time
+	all_countries_numerical.reset_index(inplace=True)
+	all_countries_numerical["trending_date"] = pd.to_datetime(all_countries_numerical["trending_date"],format="%y.%d.%m")
+	publish_time = pd.to_datetime(all_countries_numerical["publish_time"]).dt.time
+	publish_date = pd.to_datetime(all_countries_numerical["publish_time"]).dt.date
 	all_countries_numerical["publish_time"] = publish_time
-	all_countries_numerical["days_to_trends"] = time_to_trends
-	all_countries_numerical.reset_index()
+	all_countries_numerical["publish_date"] = publish_date
 
+	# calculate time_to_trends for each unique video
+	unique_videos = all_countries_numerical.drop_duplicates("video_id")
+	unique_trending_dates = unique_videos["trending_date"].values.astype("datetime64[D]")
+	unique_publish_dates = unique_videos["publish_date"].values.astype("datetime64[D]")
+	time_to_trends = (unique_trending_dates - unique_publish_dates).tolist()
+	video_list = unique_videos["video_id"].to_numpy().tolist()
 
-	# setup progress bar
-	bar = Bar('Processing', max=len(all_countries_numerical["video_id"].unique()))
+	# put time_to_trends in all_countries_numerical
+	time_to_trends_all = [None] * len(all_countries_numerical.index)
+	time_to_trends_all = [time_to_trends[video_list.index(video_id)] for video_id in all_countries_numerical["video_id"]]
 
-	# write minimum number of days_to_trends to every corresponding video
-	for video in enumerate(all_countries_numerical["video_id"].unique()):
-		# print progress
-		bar.next()
-
-		# filter rows by video id
-		df_by_video = all_countries_numerical[all_countries_numerical["video_id"]==video]
-
-		# get days_to_trends
-		all_countries_numerical[all_countries_numerical["video_id"]==video].loc[:,"days_to_trends"] = df_by_video["days_to_trends"].max()
-
-
-	bar.finish()
+	all_countries_numerical["time_to_trends"] = time_to_trends_all
 	all_countries_numerical.to_pickle("./dataset.pkl")
 
 if nargin > 0 and argin[0] == "timeseries":
