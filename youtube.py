@@ -26,8 +26,6 @@ if nargin > 0 and argin[0] == "dataset":
 		country_data["country"] = filename[0:2]
 		all_countries_numerical = all_countries_numerical.append(country_data)
 
-	print(len(all_countries_numerical.index))
-
 	# fix trending_date format and extract date from publish time
 	all_countries_numerical.reset_index(inplace=True)
 	all_countries_numerical["trending_date"] = pd.to_datetime(all_countries_numerical["trending_date"],format="%y.%d.%m")
@@ -40,7 +38,7 @@ if nargin > 0 and argin[0] == "dataset":
 	unique_videos = all_countries_numerical.drop_duplicates("video_id")
 	unique_trending_dates = unique_videos["trending_date"].values.astype("datetime64[D]")
 	unique_publish_dates = unique_videos["publish_date"].values.astype("datetime64[D]")
-	time_to_trends = (unique_trending_dates - unique_publish_dates).tolist()
+	time_to_trends = (unique_trending_dates - unique_publish_dates).astype("int").tolist()
 	video_list = unique_videos["video_id"].to_numpy().tolist()
 
 	# put time_to_trends in all_countries_numerical
@@ -48,6 +46,7 @@ if nargin > 0 and argin[0] == "dataset":
 	time_to_trends_all = [time_to_trends[video_list.index(video_id)] for video_id in all_countries_numerical["video_id"]]
 
 	all_countries_numerical["time_to_trends"] = time_to_trends_all
+	print(all_countries_numerical.head())
 	all_countries_numerical.to_pickle("./dataset.pkl")
 
 if nargin > 0 and argin[0] == "timeseries":
@@ -87,31 +86,41 @@ if nargin > 0 and argin[0] == "timeseries":
 			sum_deleted_videos.append(trending_videos["video_error_or_removed"].sum())
 
 		time_series = time_series.append(pd.DataFrame(data={ "trending_date": trending_dates,
-																		"country": [country] *len(trending_dates),
-																		"mean_likes":mean_likes,
-																		"mean_views":mean_views,
-																		"mean_comments":mean_comments,
-																		"sum_disabled_comments":sum_disabled_comments,
-																		"sum_disabled_ratings":sum_disabled_ratings,
-																		"sum_deleted_videos":sum_deleted_videos}))
+									"country": [country] *len(trending_dates),
+									"mean_likes":mean_likes,
+									"mean_views":mean_views,
+									"mean_comments":mean_comments,
+									"sum_disabled_comments":sum_disabled_comments,
+									"sum_disabled_ratings":sum_disabled_ratings,
+									"sum_deleted_videos":sum_deleted_videos}))
 
 	time_series.sort_values("trending_date",inplace=True)
+	print(timeseries.head())
 	time_series.to_pickle("./timeseries.pkl")
 
 # read dataset from pickle
 dataframe = pd.read_pickle("./dataset.pkl")
-print(len(dataframe.video_id),len(dataframe.video_id.unique()))
+
+# plot from dataframe
+plotitem = "time_to_trends"
+fig1, axis1 = plt.subplots()
+axis1.plot(dataframe.index,dataframe[plotitem].values.astype("int"))
+
+# export
+plt.title(plotitem)
+plt.savefig("dataframe_"+plotitem+".png")
 
 # read time series from pickle
 timeseries = pd.read_pickle("./timeseries.pkl")
 
 # plot mean views for each country
 plotitem = "mean_likes"
-fig, axis = plt.subplots()
+fig2, axis2 = plt.subplots()
 for country in timeseries["country"].unique():
 	df_filtered = timeseries[timeseries["country"]==country]
-	axis.plot(df_filtered["trending_date"].values,df_filtered[plotitem].values, label=country)
+	axis2.plot(df_filtered["trending_date"].values,df_filtered[plotitem].values, label=country)
 
+# export
 plt.legend(loc="best")
 plt.title(plotitem)
 plt.savefig("timeseries_"+plotitem+".png")
