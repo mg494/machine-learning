@@ -47,14 +47,14 @@ if nargin > 0 and argin[0] == "dataset":
 
 	all_countries_numerical["time_to_trends"] = time_to_trends_all
 	print(all_countries_numerical.head())
-	all_countries_numerical.to_pickle("./dataset.pkl")
+	all_countries_numerical.to_pickle("./data/dataset.pkl")
 
 if nargin > 0 and argin[0] == "timeseries":
 	# make timeseries from dataframe
 	time_series = pd.DataFrame()
 
 	# read dataset
-	dataframe = pd.read_pickle("./dataset.pkl")
+	dataframe = pd.read_pickle("./data/dataset.pkl")
 
 	for country in dataframe["country"].unique():
 		# filter frame by country
@@ -95,23 +95,36 @@ if nargin > 0 and argin[0] == "timeseries":
 									"sum_deleted_videos":sum_deleted_videos}))
 
 	time_series.sort_values("trending_date",inplace=True)
-	print(timeseries.head())
-	time_series.to_pickle("./timeseries.pkl")
+	print(time_series.head())
+	time_series.to_pickle("./data/timeseries.pkl")
+
+
+## Some descriptive analysis at first
 
 # read dataset from pickle
-dataframe = pd.read_pickle("./dataset.pkl")
+dataframe = pd.read_pickle("./data/dataset.pkl")
+
+
+selected_country = "GB"
+df_by_country = dataframe[dataframe.country==selected_country]
+print(df_by_country.sort_values("views",ascending=False).head()) #.drop_duplicates("video_id")
+
+df_by_country = df_by_country.sort_values(["time_to_trends"],ascending=True) #.drop_duplicates("video_id")
+print(df_by_country.head())
+
+dataframe = df_by_country
 
 # plot from dataframe
-plotitem = "time_to_trends"
+plotitem = "likes"
 fig1, axis1 = plt.subplots()
-axis1.plot(dataframe.index,dataframe[plotitem].values.astype("int"))
+axis1.scatter(dataframe.views.values,dataframe[plotitem].values.astype("int"))
 
 # export
 plt.title(plotitem)
-plt.savefig("dataframe_"+plotitem+".png")
+plt.savefig("./data/figures/dataframe_"+plotitem+".png")
 
 # read time series from pickle
-timeseries = pd.read_pickle("./timeseries.pkl")
+timeseries = pd.read_pickle("./data/timeseries.pkl")
 
 # plot mean views for each country
 plotitem = "mean_likes"
@@ -123,7 +136,7 @@ for country in timeseries["country"].unique():
 # export
 plt.legend(loc="best")
 plt.title(plotitem)
-plt.savefig("timeseries_"+plotitem+".png")
+plt.savefig("./data/figures/timeseries_"+plotitem+".png")
 
 
 """
