@@ -50,29 +50,30 @@ plt.title(selected_country)
 # plot measured data
 ax.scatter(df_by_video[independant],df_by_video[dependant], s=5)
 
-# select training data and randomize samples
-test_size = 0.5
-train_idx = np.random.rand(no_of_entries[0]) < test_size
-x = df_by_video[independant].to_numpy()[train_idx]
-y = df_by_video[dependant].to_numpy()[train_idx]
+test_sizes = [0.2,0.3,0.4,0.5]
+for test_size in test_sizes:
+	# select training data and randomize samples
+	train_idx = np.random.rand(no_of_entries[0]) < test_size
+	x = df_by_video[independant].to_numpy()[train_idx]
+	y = df_by_video[dependant].to_numpy()[train_idx]
 
-# transform to logarithmic regression
-x = np.log(x)
+	# transform to logarithmic regression
+	x = np.log(x)
 
-# train model
-X = sm.add_constant(x)
-model = sm.OLS(y,X)
+	# train model
+	X = sm.add_constant(x)
+	model = sm.OLS(y,X)
 
-# get the results
-results = model.fit()
+	# get the results
+	results = model.fit()
 
-# transform to linear scale
-x = np.exp(x)
+	# transform to linear scale
+	x = np.exp(x)
 
-# plot OLS
-ax.plot(x,results.fittedvalues)
+	# plot OLS
+	ax.plot(x,results.fittedvalues,label=str(test_size))
 
-# show results
-print(results.summary())
-
+	# show results
+	print(results.summary())
+plt.legend(loc="best")
 plt.savefig("./data/figures/regression_"+independant+"_"+dependant+".png")
