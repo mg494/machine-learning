@@ -17,7 +17,7 @@ dataframe = pd.read_pickle("./data/dataset.pkl")
 # select single country from time series
 selected_country = "GB"
 dependant = "likes"
-independant = "days"
+independant = "views"
 
 # filter frame
 df_by_country = dataframe[dataframe.country==selected_country]
@@ -26,39 +26,50 @@ df_by_country = dataframe[dataframe.country==selected_country]
 unique_videos = np.array(df_by_country.sort_values(dependant,ascending=False)["video_id"].unique())
 no_of_videos = len(unique_videos)
 
+# get number of entries for each video
+no_of_entries = np.array([ len(df_by_country[df_by_country["video_id"] == video].index) for video in unique_videos])
+
+# sort by number of entries
+idx = no_of_entries.argsort()
+no_of_entries = np.flip(no_of_entries[idx])
+unique_videos = np.flip(unique_videos[idx])
+
+# video with most entries
+video = unique_videos[0]
+
+# select video from data
+df_by_video = df_by_country[df_by_country["video_id"] == video]
+
 # init plot
 fig, ax = plt.subplots()
+plt.xlabel(independant)
+plt.ylabel(dependant)
+plt.title(selected_country)
 
-for video in unique_videos[0:6]:
-	df_by_video = df_by_country[df_by_country["video_id"] == video]
+# plot measured data
+ax.scatter(df_by_video[independant],df_by_video[dependant], s=5)
 
-	# reset days
-	df_by_video["days"] = (df_by_video["days"] - df_by_video["days"].min()).add(1)
+# select training data ?
+x = df_by_video[independant].to_numpy()
+y = df_by_video[dependant].to_numpy()
 
-	# select data and plot it
-	ax.scatter(df_by_video[independant],df_by_video[dependant],marker="+")
+# transform to logarithmic regression
+x = np.log(x)
 
-	# select training data ?
-	x = df_by_video[independant].to_numpy()
-	y = df_by_video[dependant].to_numpy()
+# train model
+X = sm.add_constant(x)
+model = sm.OLS(y,X)
 
-	# transform to logarithmic regression
-	x = np.log(x)
+# get the results
+results = model.fit()
 
-	# train model
-	X = sm.add_constant(x)
-	model = sm.OLS(y,X)
+# transform to linear scale
+x = np.exp(x)
 
-	# get the results
-	results = model.fit()
+# plot OLS
+ax.plot(x,results.fittedvalues)
 
-	# transform to linear scale
-	x = np.exp(x)
+# show results
+print(results.summary())
 
-	# plot OLS
-	ax.plot(x,results.fittedvalues)
-
-	# show results
-	print(results.summary())
-
-plt.savefig("./data/figures/test.png")
+plt.savefig("./data/figures/regression_"+independant+"_"+dependant+".png")
