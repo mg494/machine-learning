@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import statsmodels.api as sm
 import matplotlib.pyplot as plt
+import math
 
 pd.set_option('display.max_columns', None)
 
@@ -49,9 +50,11 @@ plt.title(selected_country)
 # plot measured data
 ax.scatter(df_by_video[independant],df_by_video[dependant], s=5)
 
-# select training data ?
-x = df_by_video[independant].to_numpy()
-y = df_by_video[dependant].to_numpy()
+# select training data and randomize samples
+test_size = 0.5
+train_idx = np.random.rand(no_of_entries[0]) < test_size
+x = df_by_video[independant].to_numpy()[train_idx]
+y = df_by_video[dependant].to_numpy()[train_idx]
 
 # transform to logarithmic regression
 x = np.log(x)
