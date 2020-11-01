@@ -16,17 +16,18 @@ ultimativly the model be should be valid for infering the current likes or views
 # import numerical dataset
 dataframe = pd.read_pickle("./data/videos.pkl")
 
-
 # sort by number of data points
 dataframe.sort_values("no_of_entries",ascending=False,inplace=True)
 
-# print for overview
-print(dataframe.head())
+# drop video with too less datapoints
+min_entries = 20
+dataframe = dataframe[dataframe["no_of_entries"]>min_entries]
+print("no of entries: ", len(dataframe.index) )
 
 # select variables of the model
 dependant = "likes"
 independant = "views"
-idx_video = 900
+idx_video = 1
 
 # init plot
 fig, ax = plt.subplots()
