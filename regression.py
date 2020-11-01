@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import statsmodels.api as sm
+from statsmodels.formula.api import ols
 import matplotlib.pyplot as plt
 import math
 
@@ -13,42 +14,45 @@ ultimativly the model be should be valid for infering the current likes or views
 """
 
 # import numerical dataset
-dataframe = pd.read_pickle("./data/dataset.pkl")
+dataframe = pd.read_pickle("./data/videos.pkl")
 
-# select single country from time series
-selected_country = "GB"
+
+# sort by number of data points
+dataframe.sort_values("no_of_entries",ascending=False,inplace=True)
+
+# print for overview
+print(dataframe.head())
+
+# select variables of the model
 dependant = "likes"
 independant = "views"
-
-# filter frame
-df_by_country = dataframe[dataframe.country==selected_country]
-
-# number of unique videos
-unique_videos = np.array(df_by_country.sort_values(dependant,ascending=False)["video_id"].unique())
-no_of_videos = len(unique_videos)
-
-# get number of entries for each video
-no_of_entries = np.array([ len(df_by_country[df_by_country["video_id"] == video].index) for video in unique_videos])
-
-# sort by number of entries
-idx = no_of_entries.argsort()
-no_of_entries = np.flip(no_of_entries[idx])
-unique_videos = np.flip(unique_videos[idx])
-
-# video with most entries
-video = unique_videos[0]
-
-# select video from data
-df_by_video = df_by_country[df_by_country["video_id"] == video]
+idx_video = 900
 
 # init plot
 fig, ax = plt.subplots()
 plt.xlabel(independant)
 plt.ylabel(dependant)
-plt.title(selected_country)
+plt.title(dataframe["country"].iloc[idx_video])
+
+x = dataframe[independant].to_numpy()[idx_video]
+y = dataframe[dependant].to_numpy()[idx_video]
 
 # plot measured data
-ax.scatter(df_by_video[independant],df_by_video[dependant], s=5)
+ax.scatter(x,y, s=5)
+
+# define model with statsmodels
+X = sm.add_constant(x)
+model = ols(formula="likes ~ views + np.sqrt(views) + np.log(views) ",data = pd.DataFrame(data={"likes":y,"views":x}))  #
+
+# results
+results = model.fit()
+
+print(results.summary())
+print(results.params)
+# plot hypothesis
+ax.plot(x,results.fittedvalues,color="r")
+
+"""
 
 test_sizes = [0.2,0.3,0.4,0.5]
 for test_size in test_sizes:
@@ -75,5 +79,6 @@ for test_size in test_sizes:
 
 	# show results
 	print(results.summary())
+"""
 plt.legend(loc="best")
 plt.savefig("./data/figures/regression_"+independant+"_"+dependant+".png")
