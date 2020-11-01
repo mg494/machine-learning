@@ -99,6 +99,57 @@ if nargin > 0 and argin[0] == "timeseries":
 	time_series.to_pickle("./data/timeseries.pkl")
 
 
+if nargin > 0 and argin[0] == "videos":
+	video_dataframe = pd.DataFrame().astype("object")
+	dataframe = pd.read_pickle("./data/dataset.pkl")
+
+	videos = dataframe["video_id"].unique()
+	countries = dataframe["country"].unique()
+
+	print(countries)
+	for country in countries:
+		# print for progress
+		print(country)
+		# select country from dataframe to account for videos trending in multiple countries
+		df_by_country = dataframe[dataframe["country"]==country]
+
+		# get list to iterate over
+		videos = df_by_country["video_id"].unique()
+
+		# initialize empty lists for data from each video
+		likes = []
+		dislikes = []
+		comments = []
+		views = []
+		no_of_entries = []
+		category = []
+
+		for video in videos:
+			# get data points for each video sorted by trending date
+			df_by_video = df_by_country[df_by_country["video_id"]==video].sort_values("trending_date")
+
+			# write arrays to lists
+			likes.append(df_by_video["likes"].to_numpy())
+			dislikes.append(df_by_video["dislikes"].to_numpy())
+			comments.append(df_by_video["comment_count"].to_numpy())
+			views.append(df_by_video["views"].to_numpy())
+			no_of_entries.append(len(df_by_video["likes"].to_numpy()))
+			category.append(df_by_video["category_id"].to_numpy()[-1])
+
+		# make data frame from lists to append everything to one dataframe
+		video_dataframe = video_dataframe.append(pd.DataFrame(data={	"videos":videos,
+																							"likes":likes,
+																							"dislikes":dislikes,
+																							"comments":comments,
+																							"views":views,
+																							"no_of_entries":no_of_entries,
+																							"category":category,
+																							"country":[country]*len(videos)}))
+	# print head for overview and write as pickle
+	print(video_dataframe.head())
+	video_dataframe.reset_index()
+	video_dataframe.to_pickle("./data/videos.pkl")
+
 ## Some descriptive analysis at first
 
 # read dataset from pickle
@@ -107,10 +158,10 @@ dataframe = pd.read_pickle("./data/dataset.pkl")
 
 selected_country = "GB"
 df_by_country = dataframe[dataframe.country==selected_country]
-print(df_by_country.sort_values("views",ascending=False).head()) #.drop_duplicates("video_id")
+#print(df_by_country.sort_values("views",ascending=False).head()) #.drop_duplicates("video_id")
 
 df_by_country = df_by_country.sort_values(["time_to_trends"],ascending=True) #.drop_duplicates("video_id")
-print(df_by_country.head())
+#print(df_by_country.head())
 
 dataframe = df_by_country
 
