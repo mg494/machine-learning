@@ -21,37 +21,50 @@ dataframe.sort_values("no_of_entries",ascending=False,inplace=True)
 
 # drop video with too less datapoints
 min_entries = 20
-dataframe = dataframe[dataframe["no_of_entries"]>min_entries]
+dataframe = dataframe[dataframe["no_of_entries"]>=min_entries]
+
+# bugs bugs bugs - i dont know what happend - no bugs if IN is excluded
+#dataframe.drop([134,1879,1878],axis=0,inplace=True)
 print("no of entries: ", len(dataframe.index) )
 
 # select variables of the model
 dependant = "likes"
 independant = "views"
-idx_video = 1
 
 # init plot
 fig, ax = plt.subplots()
 plt.xlabel(independant)
 plt.ylabel(dependant)
-plt.title(dataframe["country"].iloc[idx_video])
+#plt.title(dataframe["country"].iloc[idx_video])
 
-x = dataframe[independant].to_numpy()[idx_video]
-y = dataframe[dependant].to_numpy()[idx_video]
+plot_index = 3
+count = 0
+# init dataframe to store coefficients
+parameters = []
+for x,y in zip(dataframe[independant],dataframe[dependant]):
 
-# plot measured data
-ax.scatter(x,y, s=5)
+	# define model, a constant will be defined automatically as intercept
+	formula_string = "{0} ~ {1} + np.sqrt({1}) + np.log({1})".format(dependant,independant)
+	model = ols(formula=formula_string,data = pd.DataFrame(data={dependant:y,independant:x}))  #
 
-# define model with statsmodels
-X = sm.add_constant(x)
-model = ols(formula="likes ~ views + np.sqrt(views) + np.log(views) ",data = pd.DataFrame(data={"likes":y,"views":x}))  #
+	# results
+	results = model.fit()
+	parameters.append(np.array(results.params))
 
-# results
-results = model.fit()
+	if count == plot_index:
+		# plot measured data
+		ax.scatter(x,y, s=5)
 
-print(results.summary())
-print(results.params)
-# plot hypothesis
-ax.plot(x,results.fittedvalues,color="r")
+		# plot hypothesis
+		ax.plot(x,results.fittedvalues,color="r")
+	count += 1
+
+
+# overwrite array with DataFrame
+parameters = pd.DataFrame(data={"video_id":dataframe["video_id"],"parameters":parameters})
+parameters.to_pickle("./data/regression_parameters.pkl")
+
+
 
 """
 
@@ -81,5 +94,5 @@ for test_size in test_sizes:
 	# show results
 	print(results.summary())
 """
-plt.legend(loc="best")
+#plt.legend(loc="best")
 plt.savefig("./data/figures/regression_"+independant+"_"+dependant+".png")
