@@ -137,7 +137,7 @@ if nargin > 0 and argin[0] == "videos":
 			category.append(df_by_video["category_id"].to_numpy()[-1])
 
 		# make data frame from lists to append everything to one dataframe
-		video_dataframe = video_dataframe.append(pd.DataFrame(data={	"videos":videos,
+		video_dataframe = video_dataframe.append(pd.DataFrame(data={	"video_id":videos,
 																							"likes":likes,
 																							"dislikes":dislikes,
 																							"comments":comments,
