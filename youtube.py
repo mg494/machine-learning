@@ -124,15 +124,35 @@ if nargin > 0 and argin[0] == "videos":
 		no_of_entries = []
 		category = []
 
+		last_likes = []
+		last_dislikes = []
+		last_comments = []
+		last_views = []
+		publish_time = []
+
 		for video in videos:
 			# get data points for each video sorted by trending date
 			df_by_video = df_by_country[df_by_country["video_id"]==video].sort_values("trending_date")
 
+			#get arrays from dataframe
+			like_entries = df_by_video["likes"].to_numpy()
+			dislike_entries = df_by_video["dislikes"].to_numpy()
+			comments_entries = df_by_video["comment_count"].to_numpy()
+			views_entries = df_by_video["views"].to_numpy()
+
 			# write arrays to lists
-			likes.append(df_by_video["likes"].to_numpy())
-			dislikes.append(df_by_video["dislikes"].to_numpy())
-			comments.append(df_by_video["comment_count"].to_numpy())
-			views.append(df_by_video["views"].to_numpy())
+			likes.append(like_entries)
+			dislikes.append(dislike_entries)
+			comments.append(comments_entries)
+			views.append(views_entries)
+
+			# get values from last day on trends
+			last_likes.append(like_entries[-1])
+			last_dislikes.append(dislike_entries[-1])
+			last_comments.append(comments_entries[-1])
+			last_views.append(views_entries[-1])
+			publish_time.append(df_by_video["publish_time"].to_numpy()[0].hour)
+
 			no_of_entries.append(len(df_by_video["likes"].to_numpy()))
 			category.append(df_by_video["category_id"].to_numpy()[-1])
 
@@ -143,7 +163,12 @@ if nargin > 0 and argin[0] == "videos":
 																							"comments":comments,
 																							"views":views,
 																							"no_of_entries":no_of_entries,
+																							"publish_time":publish_time,
 																							"category":category,
+																							"last_likes":last_likes,
+																							"last_dislikes":last_dislikes,
+																							"last_comments":last_comments,
+																							"last_views":last_views,
 																							"country":[country]*len(videos)}))
 	# print head for overview and write as pickle
 	print(video_dataframe.head())
