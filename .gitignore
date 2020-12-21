@@ -3,3 +3,5 @@ __pycache__
 ./*.png
 categories.py
 test.py
+/report/*
+!/report/*.tex
