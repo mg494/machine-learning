@@ -3,6 +3,7 @@ from datetime import datetime
 import os, sys, glob
 import matplotlib.pyplot as plt
 from progress.bar import Bar
+import time
 
 # package settings
 pd.set_option('display.max_columns', None)
@@ -174,6 +175,64 @@ if nargin > 0 and argin[0] == "videos":
 	print(video_dataframe.head())
 	video_dataframe.reset_index()
 	video_dataframe.to_pickle("./data/videos.pkl")
+
+
+import requests,glob,os
+from pathlib import Path
+from progress.bar import Bar
+
+if nargin > 0 and argin[0] == "image":
+
+	SAVE_PATH = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
+	CATEGORIES = [15,19,29,43,30,44]
+
+	dataframe = pd.read_pickle("./data/videos.pkl")
+	directories = [int(os.path.basename(os.path.dirname(full_path))) for full_path in glob.glob(SAVE_PATH+"/*/")]
+
+	print(directories)
+	print(dataframe["category"].value_counts())
+	print(dataframe.columns)
+
+
+	for category in CATEGORIES:
+
+		# filter by category
+		df_by_category = dataframe[dataframe["category"] == category]
+		pbar = Bar(max = df_by_category["video_id"].nunique())
+
+		# path for current directory
+		category_path = SAVE_PATH+str(category)+"/"
+		print(category_path)
+		# make directory for each category if not already
+		if not category in directories:
+			os.mkdir(category_path)
+
+		# get list of existing thumbnails
+		existing_thumbs = os.listdir(category_path)
+		existing_thumbs = [os.path.split(file)[1].split(".")[0] for file in existing_thumbs]
+
+		pbar.start()
+		for video in df_by_category["video_id"].unique():
+			if not video in existing_thumbs:
+				img_data = requests.get("https://i.ytimg.com/vi/"+video+"/default.jpg").content
+				with open(SAVE_PATH+"/{}/".format(category)+video+".jpg", 'wb') as handler:
+					handler.write(img_data)
+			pbar.next()
+
+		pbar.finish()
+
+
+
+	"""
+	for df_by_category in categories:
+		for video in df_by_category["video_id"]:
+
+	"""
+
+
+
+
+
 
 ## Some descriptive analysis at first
 
