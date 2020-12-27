@@ -1,8 +1,14 @@
 import keras
+import tensorflow.keras.optimizers as Optimizer
+import tensorflow.keras.utils as Utils
+from keras.utils.vis_utils import model_to_dot
+
 import numpy as np
 import os,sys
 import cv2
 from sklearn.model_selection import train_test_split
+
+from myCallback import PlotLosses
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -27,6 +33,7 @@ for directory in CATEGORIES:
 min_samples = min(number_of_samples)
 print("number of samples:",min_samples)
 
+# preparing images
 thumbnail_samples = []
 y_category = []
 for category,idx in zip(CATEGORIES,range(number_of_categories)):
@@ -62,14 +69,22 @@ model.add(keras.layers.Dense(180,activation='relu'))
 model.add(keras.layers.Dense(100,activation='relu'))
 model.add(keras.layers.Dense(50,activation='relu'))
 model.add(keras.layers.Dropout(rate=0.5))
-model.add(keras.layers.Dense(2,activation='softmax'))
+model.add(keras.layers.Dense(number_of_categories,activation='softmax'))
 
 """
 ## Train the model
 """
-batch_size = 128
+# number of images passed trough the network before parameter update
+batch_size = 64
+
+# number of times complete samples are passed trough the network
 epochs = 20
 
-model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
-history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs)
+#model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
+model.compile(optimizer=Optimizer.Adam(lr=0.01),loss='categorical_crossentropy',metrics=['accuracy'])
+
+model.summary()
+plot_losses = PlotLosses()
+
+history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs,callbacks=[plot_losses])
 
