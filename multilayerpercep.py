@@ -83,11 +83,8 @@ if nargsin > 0 and argsin[0] == "train":
 	model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
 	model.add(keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"))
 	model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
-	model.add(keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"))
-	model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
 	model.add(keras.layers.Flatten())
 	model.add(keras.layers.Dropout(0.5))
-	model.add(keras.layers.Dense(64, activation="relu"))
 	model.add(keras.layers.Dense(number_of_categories, activation="softmax"))
 
 	"""
