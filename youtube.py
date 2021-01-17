@@ -184,25 +184,27 @@ from progress.bar import Bar
 if nargin > 0 and argin[0] == "image":
 
 	SAVE_PATH = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
-	CATEGORIES = [15,19,29,43,30,44]
+	CATEGORIES = [15]
 
 	dataframe = pd.read_pickle("./data/videos.pkl")
 	directories = [int(os.path.basename(os.path.dirname(full_path))) for full_path in glob.glob(SAVE_PATH+"/*/")]
 
-	print(directories)
+	print("Number of Thumbnails available for each category")
 	print(dataframe["category"].value_counts())
-	print(dataframe.columns)
 
-
+	# loop over all categories picked to be fetched
 	for category in CATEGORIES:
 
 		# filter by category
 		df_by_category = dataframe[dataframe["category"] == category]
-		pbar = Bar(max = df_by_category["video_id"].nunique())
+		number_of_thumbs = df_by_category["video_id"].nunique()
+
+		# set up progress bar
+		pbar = Bar(max = number_of_thumbs)
 
 		# path for current directory
 		category_path = SAVE_PATH+str(category)+"/"
-		print(category_path)
+
 		# make directory for each category if not already
 		if not category in directories:
 			os.mkdir(category_path)
@@ -229,16 +231,26 @@ if nargin > 0 and argin[0] == "image":
 
 	"""
 
+## print statistics for image dataset
+IMAGE_SOURCE = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
 
+dataframe = pd.read_pickle("./data/videos.pkl")
+print("Number of Thumbnails available for each category")
+print("Number of unique videos",len(dataframe.index))
 
+print(dataframe["category"].value_counts())
+file_search_string = os.path.join(IMAGE_SOURCE,"*/*.jpg")
+thumbnails = glob.glob(file_search_string)
+print("number of images in dataset",len(thumbnails))
 
+for path_lalala in glob.glob(os.path.join(IMAGE_SOURCE,"*/")):
+	print("{}: {}".format(path_lalala,len(os.listdir(path_lalala))))
 
+## print statistics of the numeric datsets
 
-## Some descriptive analysis at first
 
 # read dataset from pickle
 dataframe = pd.read_pickle("./data/dataset.pkl")
-
 
 selected_country = "GB"
 df_by_country = dataframe[dataframe.country==selected_country]
