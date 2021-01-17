@@ -27,7 +27,7 @@ MODEL_SUFFIX: suffix added to output files (lossfunction and test eval)
 SOURCE = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
 SAVE_MODEL = r"C:\Users\Marc\Documents\python_projects\machine_learning\saved_models"
 CATEGORIES = [17,2] # Pets vs. Cars [15,2] # Sport vs Cars [17,2]
-MODEL_SUFFIX = "norm_center_standard"
+MODEL_SUFFIX = "ncs_featurewise"
 
 argsin = sys.argv[1:]
 nargsin = len(argsin)
@@ -58,24 +58,36 @@ print("number of samples:",min_samples)
 
 # loading image data and arranging to arrays
 thumbnail_samples = []
+
 y_category = []
 number_of_categories=len(CATEGORIES)
 for category,idx in zip(CATEGORIES,range(number_of_categories)):
+	thumbnail_samples_per_category = []
 	print("++++++",category,idx,"+++++")
 	samples = videos_in_dir[idx]
 
 	for thumbnail_file in samples[:min_samples]:
 		thumbnail = cv2.imread(SOURCE+str(category)+r'/'+thumbnail_file) #Reading the thumbnail (OpenCV)
 
+		"""
 		# normalize, center samplewise and globally, standardize globally
 		thumbnail_sample_norm = np.asarray(thumbnail)/255.0
 		thumbnail_sample = (thumbnail_sample_norm - thumbnail_sample_norm.mean())/thumbnail_sample_norm.std()
+		"""
+		thumbnail_sample = np.asarray(thumbnail)/255.0
 
 		# append to dataset
-		thumbnail_samples.append(thumbnail_sample)
+		thumbnail_samples_per_category.append(thumbnail_sample)
+
 		truth_for_image = np.where(np.array(CATEGORIES)==category,1,0)
 		y_category.append(truth_for_image)
 
+	# center and standardize featurewise
+	thumbnail_samples_per_category = np.asarray(thumbnail_samples_per_category)
+	thumbnail_samples_per_category = (thumbnail_samples_per_category - thumbnail_samples_per_category.mean())/thumbnail_samples_per_category.std()
+	thumbnail_samples.append(thumbnail_samples_per_category)
+
+thumbnail_samples = np.concatenate(thumbnail_samples,axis=0)
 # make input arrays
 x = np.asarray(thumbnail_samples)
 y = np.asarray(y_category)
