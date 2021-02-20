@@ -6,3 +6,4 @@ test.py
 /report/*
 !/report/*.tex
 fetch_thumbs.py
+data/
