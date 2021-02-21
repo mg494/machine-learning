@@ -6,7 +6,10 @@ from sklearn.model_selection import train_test_split
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
+
+#os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 # parameters
 SOURCE = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
@@ -52,7 +55,7 @@ for category,idx in zip(CATEGORIES,range(number_of_categories)):
 		thumbnail_sample_norm = np.asarray(thumbnail)/255.0
 		thumbnail_sample = (thumbnail_sample_norm - thumbnail_sample_norm.mean())/thumbnail_sample_norm.std()
 		"""
-		thumbnail_sample = np.asarray(thumbnail)#/255.0
+		thumbnail_sample = np.asarray(thumbnail)/255.0
 
 		# append to dataset
 		thumbnail_samples.append(thumbnail_sample)		#_per_category
@@ -96,11 +99,10 @@ decoder = keras.Model(encoded_input, decoder_layer(encoded_input))
 autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
 
 autoencoder.fit(x_train, x_train,
-                epochs=50,
+                epochs=2,
                 batch_size=256,
                 shuffle=True,
                 validation_data=(x_test, x_test))
-sys.exit()
 
 # Encode and decode some digits
 # Note that we take them from the *test* set
