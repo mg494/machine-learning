@@ -7,3 +7,5 @@ test.py
 !/report/*.tex
 fetch_thumbs.py
 data/
+vae_autoencoder3.py
+image_classification.py
