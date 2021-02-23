@@ -4,7 +4,7 @@ from scipy.stats import norm
 import os
 from keras import backend as K
 
-from keras.layers import Input, Dense, Lambda, Layer, Add, Multiply
+from keras.layers import Input, Dense, Lambda, Layer, Add, Multiply, Conv2D,UpSampling2D,MaxPooling2D
 from keras.models import Model, Sequential
 from keras.datasets import mnist
 
@@ -16,22 +16,23 @@ from PIL import Image
 import tensorflow as tf
 tf.compat.v1.disable_eager_execution()
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 original_dim = 10800
 intermediate_dim = 512
 latent_dim = 2
-batch_size = 100
-epochs = 50
+batch_size = 50
+epochs = 1
 epsilon_std = 1.0
 
 # data loader
 dataset = "yt"
+LOAD_AS_GREYSCALE = False
 
 if dataset == "yt":
     # parameters
     SOURCE = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
-    CATEGORIES = [25]
+    CATEGORIES = [2]
 
     # load dataset
     # pick samples from category subdirectories
@@ -66,9 +67,14 @@ if dataset == "yt":
         for thumbnail_file in samples[:min_samples]:
             thumbnail = cv2.imread(SOURCE+str(category)+r'/'+thumbnail_file) #Reading the thumbnail (OpenCV)
 
-            thumbnail = color.rgb2gray(thumbnail)
-            thumbnail_sample = np.reshape(np.asarray(thumbnail.astype("float32")/255.),original_dim)
-            #thumbnail_sample.resize((96,120,3))
+            if LOAD_AS_GREYSCALE:
+                # grey scale
+                thumbnail = color.rgb2gray(thumbnail)
+                thumbnail_sample = np.reshape(np.asarray(thumbnail.astype("float32")/255.),original_dim)
+            else:
+                # load as rgb
+                thumbnail_sample = np.asarray(thumbnail.astype("float32")/255.)
+                thumbnail_sample = cv2.resize(thumbnail_sample,(120,92))
 
             # append to dataset
             thumbnail_samples.append(thumbnail_sample)      #_per_category
@@ -123,6 +129,12 @@ x_train, x_test,y_train, y_test = train_test_split(x,y, test_size=0.3, random_st
 print(x_train.shape, x_test.shape)
 
 
+
+
+
+
+sys.exit()
+
 def nll(y_true, y_pred):
     """ Negative log likelihood (Bernoulli). """
 
@@ -155,12 +167,23 @@ class KLDivergenceLayer(Layer):
 
 
 decoder = Sequential([
-    Dense(intermediate_dim, input_dim=latent_dim, activation='relu'),
-    Dense(original_dim, activation='sigmoid')
+    #Dense(intermediate_dim, input_dim=latent_dim, activation='relu'),
+    #Dense(original_dim, activation='sigmoid')
+    Input(shape=(23,30,2)),
+    Conv2D(192, (1, 1), activation='relu', padding='same'),
+    UpSampling2D((2, 2)),
+    Conv2D(3, (3, 3), activation='relu', padding='same'),
+    UpSampling2D((2, 2)),
 ])
 print(latent_dim)
-x = Input(shape=(original_dim,))
-h = Dense(intermediate_dim, activation='relu')(x)
+x = Input(shape=(92,120,3))
+#h = Dense(intermediate_dim, activation='relu')(x)
+
+h = Conv2D(48, (3, 3), activation='relu', padding='same')(x)
+h = MaxPooling2D((2, 2), padding='same')(h)
+h = Conv2D(96, (3, 3), activation='relu', padding='same')(h)
+h = MaxPooling2D((2, 2), padding='same')(h)
+
 
 z_mu = Dense(latent_dim)(h)
 z_log_var = Dense(latent_dim)(h)
@@ -181,27 +204,25 @@ vae.compile(optimizer='rmsprop', loss=nll)
 vae.fit(x_train,x_train,shuffle=True,epochs=epochs,batch_size=batch_size,validation_data=(x_test, x_test))
 
 encoder = Model(x, z_mu)
-
 # display a 2D plot of the digit classes in the latent space
+"""
 z_test = encoder.predict(x_test, batch_size=batch_size)
 plt.figure(figsize=(6, 6))
 plt.scatter(z_test[:, 0], z_test[:, 1], c=y_test,
             alpha=.4, s=3**2, cmap='viridis')
 plt.colorbar()
+"""
 
-# display a 2D manifold of the digits
-n = 15  # figure with 15x15 digits
+plt.figure()
+plt.subplot(1,3,1)
 
-# linearly spaced coordinates on the unit square were transformed
-# through the inverse CDF (ppf) of the Gaussian to produce values
-# of the latent variables z, since the prior of the latent space
-# is Gaussian
-u_grid = np.dstack(np.meshgrid(np.linspace(0.05, 0.95, n),
-                               np.linspace(0.05, 0.95, n)))
-z_grid = norm.ppf(u_grid)
-x_decoded = decoder.predict(z_grid.reshape(n*n, 2))
-x_decoded = x_decoded.reshape(n, n, 90, 120)
+# ORIGINAL IMAGE
+orig = x_test[0].reshape((-1,92,120,3))
+img = Image.fromarray( (255*orig).astype('uint8').reshape((92,120,3)))
 
-plt.figure(figsize=(10, 10))
-plt.imshow(np.block(list(map(list, x_decoded))), cmap='gray')
+plt.title('Original')
+plt.imshow(img)
 plt.show()
+
+# LATENT IMAGE
+latent_img = encoder.predict(orig)
