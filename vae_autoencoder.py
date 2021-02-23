@@ -19,7 +19,7 @@ tf.compat.v1.disable_eager_execution()
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 original_dim = 10800
-intermediate_dim = 512
+intermediate_dim = 1024
 latent_dim = 2
 batch_size = 100
 epochs = 50
@@ -31,7 +31,7 @@ dataset = "yt"
 if dataset == "yt":
     # parameters
     SOURCE = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
-    CATEGORIES = [25]
+    CATEGORIES = [10]
 
     # load dataset
     # pick samples from category subdirectories
@@ -190,7 +190,7 @@ plt.scatter(z_test[:, 0], z_test[:, 1], c=y_test,
 plt.colorbar()
 
 # display a 2D manifold of the digits
-n = 15  # figure with 15x15 digits
+n = 10  # figure with 15x15 digits
 
 # linearly spaced coordinates on the unit square were transformed
 # through the inverse CDF (ppf) of the Gaussian to produce values
