@@ -14,7 +14,6 @@ os.environ["CUDA_VISIBLE_DEVICES"]="1"
 # parameters
 SOURCE = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
 CATEGORIES = [17,2]
-image_shape = (90,120,3)
 
 # load dataset
 # pick samples from category subdirectories
@@ -56,6 +55,7 @@ for category,idx in zip(CATEGORIES,range(number_of_categories)):
 		thumbnail_sample = (thumbnail_sample_norm - thumbnail_sample_norm.mean())/thumbnail_sample_norm.std()
 		"""
 		thumbnail_sample = np.asarray(thumbnail)/255.0
+		thumbnail_sample.resize((96,120,3))
 
 		# append to dataset
 		thumbnail_samples.append(thumbnail_sample)		#_per_category
@@ -74,29 +74,38 @@ x_train, x_test = train_test_split(x, test_size=0.3, random_state=42)
 # This is the size of our encoded representations
 encoding_dim = 32  # 32 floats -> compression of factor 24.5, assuming the input is 784 floats
 
-# This is our input image
-input_img = keras.Input(shape=image_shape)
+# ENCODER
+image_shape = (96,120,3)
+input_img = layers.Input(shape=image_shape)
+x = layers.Conv2D(48, (3, 3), activation='relu', padding='same')(input_img)
+x = layers.MaxPooling2D((2, 2), padding='same')(x)
+#x = layers.Conv2D(96, (3, 3), activation='relu', padding='same')(x)
+#x = layers.MaxPooling2D((2, 2), padding='same')(x)
+#x = layers.Conv2D(192, (3, 3), activation='relu', padding='same')(x)
+#x = layers.MaxPooling2D((2, 2), padding='same')(x)
+encoded = layers.Conv2D(32, (1, 1), activation='relu', padding='same')(x)
 
-# "encoded" is the encoded representation of the input
-encoded = layers.Dense(encoding_dim, activation='relu')(input_img)
+latentSize = (12,15,32)
 
-# "decoded" is the lossy reconstruction of the input
-decoded = layers.Dense(3, activation='sigmoid')(encoded)
+# DECODER
+direct_input = layers.Input(shape=latentSize)
+#x = layers.Conv2D(192, (1, 1), activation='relu', padding='same')(direct_input)
+#x = layers.UpSampling2D((2, 2))(x)
+x = layers.Conv2D(192, (3, 3), activation='relu', padding='same')(direct_input)
+x = layers.UpSampling2D((2, 2))(x)
+#x = layers.Conv2D(96, (3, 3), activation='relu', padding='same')(x)
+#x = layers.UpSampling2D((2, 2))(x)
+x = layers.Conv2D(48, (3, 3), activation='relu', padding='same')(x)
+decoded = layers.Conv2D(3, (3, 3), activation='sigmoid', padding='same')(x)
 
-# This model maps an input to its reconstruction
-autoencoder = keras.Model(input_img, decoded)
+# COMPILE
+encoder = keras.models.Model(input_img, encoded)
+decoder = keras.models.Model(direct_input, decoded)
+autoencoder = keras.models.Model(input_img, decoder(encoded))
+encoder.summary()
+decoder.summary()
+autoencoder.compile(optimizer='Adam', loss='binary_crossentropy')
 
-# This model maps an input to its encoded representation
-encoder = keras.Model(input_img, encoded)
-
-# This is our encoded (32-dimensional) input
-encoded_input = keras.Input(shape=(encoding_dim,))
-# Retrieve the last layer of the autoencoder model
-decoder_layer = autoencoder.layers[-1]
-# Create the decoder model
-decoder = keras.Model(encoded_input, decoder_layer(encoded_input))
-
-autoencoder.compile(optimizer='adam', loss='binary_crossentropy')
 
 autoencoder.fit(x_train, x_train,
                 epochs=2,
