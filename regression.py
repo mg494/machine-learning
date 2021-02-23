@@ -52,6 +52,9 @@ for x,y in zip(dataframe[independant],dataframe[dependant]):
 	parameters.append(np.array(results.params))
 
 	if count == plot_index:
+		# mean square error
+		print(results.summary())
+
 		# plot measured data
 		ax.scatter(x,y, s=5)
 
@@ -61,10 +64,25 @@ for x,y in zip(dataframe[independant],dataframe[dependant]):
 
 
 # overwrite array with DataFrame
-parameters = pd.DataFrame(data={"video_id":dataframe["video_id"],"parameters":parameters})
+column_name = independant+"_vs_"+dependant
+parameters = pd.DataFrame(data={"video_id":dataframe["video_id"],column_name:parameters})
 parameters.to_pickle("./data/regression_parameters.pkl")
 
+plt.savefig("./data/figures/regression_"+independant+"_"+dependant+".png")
 
+# multi dimensional
+independant = ["views","likes"]
+dependant = "comments"
+
+formula_string = dependant +"~"
+for idx,var in enumerate(independant):
+	print(idx,var)
+	if idx > 0:
+		formula_string += "+ {0} + np.sqrt({0}) + np.log({0})".format(var)
+	else:
+		formula_string += "{0} + np.sqrt({0}) + np.log({0})".format(var)
+
+print(formula_string)
 
 """
 
@@ -95,4 +113,3 @@ for test_size in test_sizes:
 	print(results.summary())
 """
 #plt.legend(loc="best")
-plt.savefig("./data/figures/regression_"+independant+"_"+dependant+".png")

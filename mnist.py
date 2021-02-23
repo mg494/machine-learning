@@ -80,7 +80,7 @@ def mnist_param(network_topo=[
 
 
 # Model / data parameters
-
+"""
 names = ["relu","softmax", "sigmoid","tanh"]
 topos = [   [
             keras.Input(shape=input_shape),
@@ -124,14 +124,55 @@ topos = [   [
             ]
             ]
 
+"""
+
+names = ["0Conv","1Conv", "2Conv","3Conv"]
+topos = [   [
+            keras.Input(shape=input_shape),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(num_classes, activation="softmax"),
+            ],
+            [
+            keras.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(num_classes, activation="softmax"),
+            ],
+            [
+            keras.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(num_classes, activation="softmax"),
+            ],
+            [
+            keras.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(num_classes, activation="softmax"),
+            ]
+            ]
+
+
 fig,ax = plt.subplots(2)
 ax[0].set_ylabel("loss")
 ax[1].set_ylabel("accuracy")
 
 train_results = pd.DataFrame()
-test_results = pd.DataFrame()
 
-test_results = open("./data/mnist_test_results.txt","w+")
+test_results = open("./data/mnist_test_results_layers.txt","w+")
 
 
 for topo,function_name in zip(topos,names):
@@ -158,10 +199,10 @@ for topo,function_name in zip(topos,names):
     print("Test accuracy:", score[1])
 
 test_results.close()
-train_results.to_csv("./data/mnist_train_results.csv")
+train_results.to_csv("./data/mnist_train_results_layers.csv")
 ax[0].legend(loc='upper right')
 ax[1].legend(loc='lower right')
 ax[0].set_title('training performance')
 ax[1].set_xlabel('epoch')
-fig.savefig("./data/figures/mnist_train_performance.png")
+fig.savefig("./data/figures/mnist_train_performance_layers.png")
 
