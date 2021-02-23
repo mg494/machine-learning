@@ -21,8 +21,8 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 original_dim = 10800
 intermediate_dim = 512
 latent_dim = 2
-batch_size = 50
-epochs = 1
+batch_size = 200
+epochs = 30
 epsilon_std = 1.0
 
 # data loader
@@ -32,7 +32,7 @@ LOAD_AS_GREYSCALE = False
 if dataset == "yt":
     # parameters
     SOURCE = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
-    CATEGORIES = [2]
+    CATEGORIES = [10]
 
     # load dataset
     # pick samples from category subdirectories
@@ -126,14 +126,10 @@ elif dataset == "dogs":
 
 # split the data
 x_train, x_test,y_train, y_test = train_test_split(x,y, test_size=0.3, random_state=42)
+#x_train = x
+#x_test = x
 print(x_train.shape, x_test.shape)
 
-
-
-
-
-
-sys.exit()
 
 def nll(y_true, y_pred):
     """ Negative log likelihood (Bernoulli). """
@@ -164,7 +160,6 @@ class KLDivergenceLayer(Layer):
         self.add_loss(K.mean(kl_batch), inputs=inputs)
 
         return inputs
-
 
 decoder = Sequential([
     #Dense(intermediate_dim, input_dim=latent_dim, activation='relu'),
@@ -216,13 +211,35 @@ plt.colorbar()
 plt.figure()
 plt.subplot(1,3,1)
 
-# ORIGINAL IMAGE
-orig = x_test[0].reshape((-1,92,120,3))
+orig = x_test[0,:,:,:].reshape((-1,92,120,3))
+
+# display original image
 img = Image.fromarray( (255*orig).astype('uint8').reshape((92,120,3)))
 
 plt.title('Original')
 plt.imshow(img)
-plt.show()
 
-# LATENT IMAGE
+# encode
 latent_img = encoder.predict(orig)
+"""
+mx = np.max( latent_img[0] )
+mn = np.min( latent_img[0] )
+latent_flat = ((latent_img[0] - mn) * 255/(mx - mn)).flatten(order='F')
+img = Image.fromarray( latent_flat[:2025].astype('uint8').reshape((23,30)), mode='L')
+plt.subplot(1,3,2)
+plt.title('Latent')
+plt.xlim((-10,55))
+plt.ylim((-10,55))
+plt.axis('off')
+plt.imshow(img)
+"""
+# display reconstructed
+# decode
+decoded_imgs = decoder.predict(latent_img[0].reshape((-1,23,30,2)))
+
+img = Image.fromarray( (255*decoded_imgs).astype('uint8').reshape((92,120,3)))
+plt.subplot(1,3,3)
+plt.title('Reconstructed')
+plt.imshow(img)
+
+plt.show()
