@@ -22,7 +22,7 @@ if nargin > 0 and argin[0] == "dataset":
 	files = glob.glob(SOURCE+r"\dataset\*.csv")
 	for file in files:
 		filepath, filename = os.path.split(file)
-		country_data = pd.read_csv(file)
+		country_data = pd.read_csv(file,encoding="latin-1")
 		country_data.drop(["title","channel_title","tags","thumbnail_link","description"],axis="columns",inplace = True)
 		country_data["country"] = filename[0:2]
 		all_countries_numerical = all_countries_numerical.append(country_data)
@@ -184,7 +184,7 @@ from progress.bar import Bar
 if nargin > 0 and argin[0] == "image":
 
 	SAVE_PATH = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
-	CATEGORIES = [15]
+	CATEGORIES = [43]
 
 	dataframe = pd.read_pickle("./data/videos.pkl")
 	directories = [int(os.path.basename(os.path.dirname(full_path))) for full_path in glob.glob(SAVE_PATH+"/*/")]
