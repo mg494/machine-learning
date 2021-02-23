@@ -19,10 +19,10 @@ tf.compat.v1.disable_eager_execution()
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 original_dim = 10800
-intermediate_dim = 1024
+intermediate_dim = 2048
 latent_dim = 2
-batch_size = 100
-epochs = 50
+batch_size = 1000
+epochs = 200
 epsilon_std = 1.0
 
 # data loader
