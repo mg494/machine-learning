@@ -84,6 +84,22 @@ As the second task the model performance in dependency of the model depth shall 
 \subsection{Image Classification Model}
 
 \section{Variational Autoencoders}
+Autoencoders are a technique used for dimensionality reduction of data like images or sound for example
+learning effective encoding which holds the most relevant features
+input layer which takes in the image data, encoding layer which
+\subsection{Theory}
+Autoencoders are based on feed-forward neural networks. They can generally be split in an encoder and a decoder part. The encoder \(\phi\) takes in the input image \(\mathcal{X}\) an ouputs the image in the encoded feature space \(\mathcal{F}\) also known as latent space. The decoder \(\psi\) maps the latent image \(\mathcal{F}\) to the reconstructed image \(\mathcal{X}\).
+
+\begin{array}{l}
+\phi: \mathcal{X} \rightarrow \mathcal{F} \\
+\psi: \mathcal{F} \rightarrow \mathcal{X} \\
+\phi, \psi=\arg \min \|X-(\psi \circ \phi) X\|^{2}
+\end{array}
+
+vaes are similar to basic autoencoders but are generative models. They are used to encode data to the latent space but with strong assumtions in the latent space. To avoid overfitting and to enable the generative properties of the model, the training is regularised. therefore their underlying mathematical formulation differs significantly from basic autoencoders. VAEs use an additional loss component - the Kulback-Leibler Divergence - for the latent layer that tends to fit the distribution of the variables returned by the encoder close to standard normal distribution.
+
+\subsection{Task}
+As previously mentioned an autoencoder can be used to compress images to its relevant features and then recreate them from there. At first the model will be described with the MNIST dataset an then adapted to fit the YouTube Thumbnail dataset.
 
 
 \chapter{Measuring Machine Learning Success}
@@ -91,6 +107,8 @@ As the second task the model performance in dependency of the model depth shall 
 \chapter{Results}
 \section{MNIST Model}
 In this section the results of the accuracy study of a simple ConvNet with the MNIST dataset are presented. At first the influence of the acvitation function was evaluated. Four commonly used activation functions were choosen for this task. For the training set the accuracy and the loss function were plotted over seven epochs. It can be seen that the networks with ReL and hyperbolic tangent activation function are performing bettr than the networks with the sigmoid and softmax. The second task adresses the depth of the network and its influence on the test accuracy. For that the number of convolutional layers is increased starting with zero.
+
+
 \begin{figure}
 	\centering
 	\begin{subfigure}[H]{0.5\textwidth}
