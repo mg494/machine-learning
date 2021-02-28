@@ -57,7 +57,7 @@ count = 0
 for x,y in zip(dataframe[independant],dataframe[dependant]):
 
 	# test size
-	x_train, x_test,y_train, y_test = train_test_split(x,y, test_size=0.5, random_state=42, shuffle=True)
+	x_train, x_test,y_train, y_test = train_test_split(x,y, test_size=0.1, random_state=42, shuffle=True)
 
 	# define model, a constant will be defined automatically as intercept
 	formula_string = "{0} ~ {1} + np.sqrt({1}) + np.log({1})".format(dependant,independant)
@@ -68,6 +68,8 @@ for x,y in zip(dataframe[independant],dataframe[dependant]):
 	parameters.append(np.array(results.params))
 
 	if count == plot_index:
+		print(x,y)
+
 		# output training data
 		print("train shape:",x_train.shape)
 		print("test shape:",x_test.shape)
@@ -97,7 +99,7 @@ for x,y in zip(dataframe[independant],dataframe[dependant]):
 		# plot test data
 		ax.scatter(x_test,y_test,marker = "x",color="k",label="test data")
 	count += 1
-plt.legend(loc="upper left")
+
 
 # overwrite array with DataFrame
 column_name = independant+"_vs_"+dependant
@@ -107,7 +109,46 @@ parameters.to_pickle("./data/regression_parameters.pkl")
 
 plt.savefig("./data/figures/regression_"+independant+"_"+dependant+".png")
 
-# multi dimensional
+# record change of mse
+test_sizes = [0.5,0.4,0.3,0.2,0.1]
+train_samples = []
+train_mse = []
+test_mse = []
+
+# record for single video sample
+x,y = dataframe[independant].iloc[plot_index],dataframe[dependant].iloc[plot_index]
+print(x,y)
+
+# loop over test sizes
+for test_size in test_sizes:
+	# test size
+	x_train, x_test,y_train, y_test = train_test_split(x,y, test_size=test_size, random_state=42, shuffle=True)
+	train_samples.append(len(x_train))
+
+	# define model, a constant will be defined automatically as intercept
+	formula_string = "{0} ~ {1} + np.sqrt({1}) + np.log({1})".format(dependant,independant)
+	model = ols(formula=formula_string,data = pd.DataFrame(data={dependant:y_train,independant:x_train}))  #
+
+	# results
+	results = model.fit()
+	train_mse.append(mse(y_train,results.fittedvalues.to_numpy()))
+
+	y_pred = results.predict(pd.DataFrame(data={dependant:y_test,independant:x_test}))
+	test_mse.append(mse(y_pred,y_test))
+
+fig1,ax1 = plt.subplots()
+ax1.plot(train_samples,train_mse,label="training")
+ax1.plot(train_samples,test_mse,label = "test")
+ax1.set_xlim(left=min(train_samples),right=max(train_samples))
+plt.xticks(train_samples)
+plt.xlabel("number of samples")
+plt.ylabel("mean squared error")
+plt.legend(loc="upper right")
+
+"""
+------- multi dimensional model ------------
+"""
+
 independant = ["views","likes"]
 dependant = "comments"
 
@@ -120,36 +161,6 @@ for idx,var in enumerate(independant):
 		formula_string += "{0} + np.sqrt({0}) + np.log({0})".format(var)
 
 print(formula_string)
-fig1, ax1 = plt.subplots()
 
-test_sizes = [0.2,0.3,0.4,0.5]
-for test_size in test_sizes:
-	# select training data and randomize samples
-	train_idx = np.random.rand(dataframe.no_of_entries.to_numpy()[0]) < test_size
-	x = dataframe[independant[0]].to_numpy()[0]
-	print(x)
-	x = x[train_idx]
-	y = dataframe[dependant].to_numpy()[0]
-	y= y[train_idx]
-
-	# transform to logarithmic regression
-	x = np.log(x)
-
-	# train model
-	X = sm.add_constant(x)
-	model = sm.OLS(y,X)
-
-	# get the results
-	results = model.fit()
-
-	# transform to linear scale
-	x = np.exp(x)
-
-	# plot OLS
-	ax1.plot(x,results.fittedvalues,label=str(test_size))
-
-	# show results
-	print(results.summary())
-plt.legend(loc="upper left")
 
 plt.show()
