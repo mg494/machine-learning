@@ -122,7 +122,7 @@ if nargsin > 0 and argsin[0] == "train":
 	## Train the model
 	"""
 	# number of images passed trough the network before parameter update
-	batch_size = 64
+	batch_size = 128
 
 	# number of times complete samples are passed trough the network
 	epochs = 50
@@ -148,7 +148,7 @@ test_results = open("./data/thumbnail_stats/thumbnail_test_"+MODEL_SUFFIX+".txt"
 test_results.write("{}\t{}\n".format( score[0], score[1]))
 test_results.close()
 
-plt.rcParams.update({'font.size': 16})
+#plt.rcParams.update({'font.size': 16})
 
 # print latest loss fcn
 csv_history = pd.read_csv('./data/thumbnail_stats/thumbnail_training_'+MODEL_SUFFIX+'.log')
@@ -157,13 +157,15 @@ print(csv_history.columns)
 csv_history.drop('epoch',axis=1,inplace=True)
 csv_history.plot(logy=True)#logy=True
 fig = plt.gcf()
-fig.set_size_inches(11,7)
+#fig.set_size_inches(11,7)
 ax = plt.gca()
-ax.set_ylim(top=1)
+ax.set_ylim(top=10)
+ax.set_xlim(left=0)
+
 plt.title('model training')
 plt.ylabel('quantity')
 plt.xlabel('epoch')
-plt.legend(loc='lower left')
-plt.grid(which="both",linestyle=':')
+plt.legend(loc='upper right')
+#plt.grid(which="both",linestyle=':')
 plt.savefig("./data/figures/mlp/lossfunction_"+MODEL_SUFFIX+".png")
 plt.show()
