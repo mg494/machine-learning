@@ -3,9 +3,13 @@ import numpy as np
 import statsmodels.api as sm
 from statsmodels.formula.api import ols
 import matplotlib.pyplot as plt
-import math
+import math,sys
 from sklearn.model_selection import train_test_split
 from statsmodels.tools.eval_measures import mse
+from matplotlib import cm
+
+from matplotlib.ticker import LinearLocator, FormatStrFormatter
+from mpl_toolkits.mplot3d import Axes3D
 pd.set_option('display.max_columns', None)
 
 """
@@ -117,7 +121,6 @@ test_mse = []
 
 # record for single video sample
 x,y = dataframe[independant].iloc[plot_index],dataframe[dependant].iloc[plot_index]
-print(x,y)
 
 # loop over test sizes
 for test_size in test_sizes:
@@ -160,7 +163,35 @@ for idx,var in enumerate(independant):
 	else:
 		formula_string += "{0} + np.sqrt({0}) + np.log({0})".format(var)
 
-print(formula_string)
+# record for single video sample
+x = dataframe[independant].iloc[plot_index]
+y = dataframe[dependant].iloc[plot_index]
+data = pd.DataFrame(data={dependant:y,independant[0]:x[0],independant[1]:x[1]})
+
+#x_train, x_test,y_train, y_test
+data_train,data_test = train_test_split(data, test_size=0.1, random_state=42, shuffle=True)
+print(data_train)
+model = ols(formula=formula_string,data = data_train)  #
+results = model.fit()
+results.summary()
+
+# plot 3d
+fig3 = plt.figure()
+ax3 = fig3.gca(projection='3d')
+#ax3 = Axes3D(fig)
+
+sort_idx = np.argsort(results.fittedvalues)
+z_fit = results.fittedvalues.to_numpy()[sort_idx]
+x_fit = data_train.views.to_numpy()[sort_idx]
+y_fit = data_train.likes.to_numpy()[sort_idx]
+
+ax3.plot(x[0],x[1],y,label="training data")
+ax3.plot(x_fit,y_fit,z_fit)
+
+ax3.set_xlabel("views")
+ax3.set_ylabel("likes")
+ax3.set_zlabel("comments")
+
 
 
 plt.show()
