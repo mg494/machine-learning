@@ -264,10 +264,12 @@ dataframe = df_by_country
 # plot from dataframe
 plotitem = "likes"
 fig1, axis1 = plt.subplots()
-axis1.scatter(dataframe.views.values,dataframe[plotitem].values.astype("int"))
+axis1.scatter(dataframe.views.values/1e6,dataframe[plotitem].values.astype("int")/1e6,s=5)
+axis1.set_xlabel("views in millions")
+axis1.set_ylabel("likes in millions")
 
 # export
-plt.title(plotitem)
+#plt.title("likes of all entries in dataset")
 plt.savefig("./data/figures/dataframe_"+plotitem+".png")
 
 # read time series from pickle

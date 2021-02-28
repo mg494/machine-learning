@@ -20,7 +20,7 @@ ultimativly the model be should be valid for infering the current likes or views
 
 # import numerical dataset
 dataframe = pd.read_pickle("./data/videos.pkl")
-
+print(dataframe.head())
 # sort by number of data points
 dataframe.sort_values("no_of_entries",ascending=False,inplace=True)
 
@@ -89,7 +89,7 @@ for x,y in zip(dataframe[independant],dataframe[dependant]):
 		print("test mse",mse(y_pred,y_test))
 
 		# plot measured data
-		ax.scatter(x_train,y_train, s=5,label="training data")
+		ax.scatter(x_train/1e6,y_train/1e3, s=5,label="training data")
 
 		# plot hypothesis
 		sort_idx = np.argsort(x_train)
@@ -98,10 +98,13 @@ for x,y in zip(dataframe[independant],dataframe[dependant]):
 
 		x_hypo = np.linspace(min(x),max(x),100)
 		y_hypo = results.predict(pd.DataFrame(data={dependant:x_hypo,independant:x_hypo}))
-		ax.plot(x_hypo,y_hypo,color="r", label="hypothesis")
+		ax.plot(x_hypo/1e6,y_hypo/1e3,color="r", label="hypothesis")
 
 		# plot test data
-		ax.scatter(x_test,y_test,marker = "x",color="k",label="test data")
+		ax.scatter(x_test/1e6,y_test/1e3,marker = "x",color="k",label="test data")
+		ax.set_xlabel("views in millions")
+		ax.set_ylabel("likes in thousands")
+		ax.legend()
 	count += 1
 
 
@@ -110,7 +113,6 @@ column_name = independant+"_vs_"+dependant
 parameters = pd.DataFrame(data={"video_id":dataframe["video_id"],column_name:parameters})
 print(parameters.head())
 parameters.to_pickle("./data/regression_parameters.pkl")
-
 plt.savefig("./data/figures/regression_"+independant+"_"+dependant+".png")
 
 # record change of mse
@@ -144,7 +146,7 @@ ax1.plot(train_samples,train_mse,label="training")
 ax1.plot(train_samples,test_mse,label = "test")
 ax1.set_xlim(left=min(train_samples),right=max(train_samples))
 plt.xticks(train_samples)
-plt.xlabel("number of samples")
+plt.xlabel("number of training samples")
 plt.ylabel("mean squared error")
 plt.legend(loc="upper right")
 
@@ -173,7 +175,7 @@ data_train,data_test = train_test_split(data, test_size=0.1, random_state=42, sh
 print(data_train)
 model = ols(formula=formula_string,data = data_train)  #
 results = model.fit()
-results.summary()
+print(results.summary())
 
 # plot 3d
 fig3 = plt.figure()
@@ -185,12 +187,12 @@ z_fit = results.fittedvalues.to_numpy()[sort_idx]
 x_fit = data_train.views.to_numpy()[sort_idx]
 y_fit = data_train.likes.to_numpy()[sort_idx]
 
-ax3.plot(x[0],x[1],y,label="training data")
-ax3.plot(x_fit,y_fit,z_fit)
+ax3.plot(x[0]/1e6,x[1]/1e3,y/1e3,label="training data")
+ax3.plot(x_fit/1e6,y_fit/1e3,z_fit/1e3)
 
-ax3.set_xlabel("views")
-ax3.set_ylabel("likes")
-ax3.set_zlabel("comments")
+ax3.set_xlabel("views in millions")
+ax3.set_ylabel("likes in thousands")
+ax3.set_zlabel("comments in thousands")
 
 
 
