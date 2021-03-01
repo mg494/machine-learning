@@ -9,3 +9,4 @@ fetch_thumbs.py
 data/
 image_classification.py
 vae_autoencoder3.py
+/old
