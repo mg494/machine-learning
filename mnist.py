@@ -59,7 +59,6 @@ def mnist_param(network_topo=[
     """
     ## Build the model
     """
-    layer_string = "2Conv_relu"
     model = keras.Sequential(
         network_topo
     )
@@ -70,8 +69,8 @@ def mnist_param(network_topo=[
     ## Train the model
     """
 
-    batch_size = 128
-    epochs = 7
+    batch_size = 2048
+    epochs = 15
 
     model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
     history = model.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_split=0.1)
@@ -80,23 +79,12 @@ def mnist_param(network_topo=[
 
 
 # Model / data parameters
-
-names = ["relu","softmax", "sigmoid","tanh"]
+names = ["relu", "sigmoid","tanh"]
 topos = [   [
             keras.Input(shape=input_shape),
             layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
             layers.MaxPooling2D(pool_size=(2, 2)),
             layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
-            layers.MaxPooling2D(pool_size=(2, 2)),
-            layers.Flatten(),
-            layers.Dropout(0.5),
-            layers.Dense(num_classes, activation="softmax"),
-            ],
-            [
-            keras.Input(shape=input_shape),
-            layers.Conv2D(32, kernel_size=(3, 3), activation="softmax"),
-            layers.MaxPooling2D(pool_size=(2, 2)),
-            layers.Conv2D(64, kernel_size=(3, 3), activation="softmax"),
             layers.MaxPooling2D(pool_size=(2, 2)),
             layers.Flatten(),
             layers.Dropout(0.5),
@@ -124,12 +112,54 @@ topos = [   [
             ]
             ]
 
+"""
+
+names = ["0Conv","1Conv", "2Conv","3Conv"]
+topos = [   [
+            keras.Input(shape=input_shape),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(num_classes, activation="softmax"),
+            ],
+            [
+            keras.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(num_classes, activation="softmax"),
+            ],
+            [
+            keras.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(num_classes, activation="softmax"),
+            ],
+            [
+            keras.Input(shape=input_shape),
+            layers.Conv2D(32, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Conv2D(64, kernel_size=(3, 3), activation="relu"),
+            layers.MaxPooling2D(pool_size=(2, 2)),
+            layers.Flatten(),
+            layers.Dropout(0.5),
+            layers.Dense(num_classes, activation="softmax"),
+            ]
+            ]
+"""
+
+
 fig,ax = plt.subplots(2)
 ax[0].set_ylabel("loss")
 ax[1].set_ylabel("accuracy")
 
 train_results = pd.DataFrame()
-test_results = pd.DataFrame()
 
 test_results = open("./data/mnist_test_results.txt","w+")
 

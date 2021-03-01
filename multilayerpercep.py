@@ -9,7 +9,7 @@ import os,sys
 import cv2
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-
+import matplotlib
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
@@ -26,8 +26,8 @@ MODEL_SUFFIX: suffix added to output files (lossfunction and test eval)
 
 SOURCE = r"C:/Users/Marc/Documents/python_projects/machine_learning/thumbnails/"
 SAVE_MODEL = r"C:\Users\Marc\Documents\python_projects\machine_learning\saved_models"
-CATEGORIES = [17,2] # Pets vs. Cars [15,2] # Sport vs Cars [17,2]
-MODEL_SUFFIX = "ncs_featurewise"
+CATEGORIES = [17,2]# Pets vs. Cars [15,2] # Sport vs Cars [17,2] # 4_categories [17,10,26]
+MODEL_SUFFIX = "conv_only"
 
 argsin = sys.argv[1:]
 nargsin = len(argsin)
@@ -70,27 +70,28 @@ for category,idx in zip(CATEGORIES,range(number_of_categories)):
 		thumbnail = cv2.imread(SOURCE+str(category)+r'/'+thumbnail_file) #Reading the thumbnail (OpenCV)
 
 		"""
+		# samplewise
 		# normalize, center samplewise and globally, standardize globally
 		thumbnail_sample_norm = np.asarray(thumbnail)/255.0
 		thumbnail_sample = (thumbnail_sample_norm - thumbnail_sample_norm.mean())/thumbnail_sample_norm.std()
 		"""
-		thumbnail_sample = np.asarray(thumbnail)/255.0
+		thumbnail_sample = np.asarray(thumbnail)#/255.0
 
 		# append to dataset
-		thumbnail_samples_per_category.append(thumbnail_sample)
+		thumbnail_samples.append(thumbnail_sample)		#_per_category
 
 		truth_for_image = np.where(np.array(CATEGORIES)==category,1,0)
 		y_category.append(truth_for_image)
 
-	# center and standardize featurewise
-	thumbnail_samples_per_category = np.asarray(thumbnail_samples_per_category)
-	thumbnail_samples_per_category = (thumbnail_samples_per_category - thumbnail_samples_per_category.mean())/thumbnail_samples_per_category.std()
-	thumbnail_samples.append(thumbnail_samples_per_category)
+	## center and standardize featurewise
+	#thumbnail_samples_per_category = np.asarray(thumbnail_samples_per_category)
+	#thumbnail_samples_per_category = (thumbnail_samples_per_category - thumbnail_samples_per_category.mean())/thumbnail_samples_per_category.std()
+	#thumbnail_samples.append(thumbnail_samples_per_category)
 
-thumbnail_samples = np.concatenate(thumbnail_samples,axis=0)
+#thumbnail_samples = np.concatenate(thumbnail_samples,axis=0)
 # make input arrays
 x = np.asarray(thumbnail_samples)
-y = np.asarray(y_category)
+y = np.asarray(y_category)#[:,0]
 print("shape of input array:",x.shape)
 print("shape of output array:",y.shape)
 
@@ -109,19 +110,19 @@ if nargsin > 0 and argsin[0] == "train":
 
 	# source: mnist inspired
 	model.add(keras.Input(shape=(90,120,3)))
-	model.add(keras.layers.Conv2D(32, kernel_size=(3, 3), activation="relu"))
-	model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
 	model.add(keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"))
-	model.add(keras.layers.MaxPooling2D(pool_size=(2, 2)))
+	model.add(keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"))
+	model.add(keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"))
+	model.add(keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"))
+	model.add(keras.layers.Conv2D(64, kernel_size=(3, 3), activation="relu"))
 	model.add(keras.layers.Flatten())
-	model.add(keras.layers.Dropout(0.5))
 	model.add(keras.layers.Dense(number_of_categories, activation="softmax"))
 
 	"""
 	## Train the model
 	"""
 	# number of images passed trough the network before parameter update
-	batch_size = 64
+	batch_size = 128
 
 	# number of times complete samples are passed trough the network
 	epochs = 50
@@ -147,15 +148,24 @@ test_results = open("./data/thumbnail_stats/thumbnail_test_"+MODEL_SUFFIX+".txt"
 test_results.write("{}\t{}\n".format( score[0], score[1]))
 test_results.close()
 
+#plt.rcParams.update({'font.size': 16})
+
 # print latest loss fcn
 csv_history = pd.read_csv('./data/thumbnail_stats/thumbnail_training_'+MODEL_SUFFIX+'.log')
 csv_history.set_index("epoch")
 print(csv_history.columns)
 csv_history.drop('epoch',axis=1,inplace=True)
-csv_history.plot()#logy=True
-plt.title('model performance')
+csv_history.plot(logy=True)#logy=True
+fig = plt.gcf()
+#fig.set_size_inches(11,7)
+ax = plt.gca()
+ax.set_ylim(top=10)
+ax.set_xlim(left=0)
+
+plt.title('model training')
 plt.ylabel('quantity')
 plt.xlabel('epoch')
 plt.legend(loc='upper right')
+#plt.grid(which="both",linestyle=':')
 plt.savefig("./data/figures/mlp/lossfunction_"+MODEL_SUFFIX+".png")
 plt.show()
